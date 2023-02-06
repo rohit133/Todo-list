@@ -3,46 +3,145 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const date = require(__dirname+"/date.js");
+const mongoose = require("mongoose");
+const _ = require("lodash");
 const app = express();
-const items = []; 
-const workItems = [];
-
+const day = date.getDay();
 // Setting the view engine to ejs and using the bodyParser 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
+mongoose.set("strictQuery", false);
+
+// connecting to MongoDB 
+mongoose.connect("mongodb://0.0.0.0:27017/todolistDb")
+
+const itemSchema = {
+    name : String
+};  
+
+// Creating Model
+const Item = mongoose.model("Item", itemSchema);
+
+const item1 = new Item({
+    name :"Workout"
+});
+
+const item2 = new Item({
+    name :"Item shopping"
+});
+
+const item3 = new Item({
+    name :"Cook food"
+});
+
+defaultItem = [item1,item2,item3];
+
+const listSchema = {
+    name : String,
+    items : [itemSchema]
+} 
+const List = mongoose.model("List", listSchema)
+
+
 
 // Converting Time and sending it to the List file 
 app.get("/", function(req, res){
-    const day = date.getDay();
-    res.render("list",{listTitle: day , newListItems: items}); 
+    Item.find({}, function(err, result){
+        if(result.length === 0){
+            Item.insertMany(defaultItem, function(err){
+                if(err){
+                    console.log(err);
+                } else {
+                    console.log("Inserted Successfully.")
+                }
+            });
+            res.redirect("/")
+        } else {
+            
+            res.render("list",{listTitle: day , newListItems: result}); 
+        }
+       
+    });
 });
+
+// Creating Custome name list
+app.get("/:customList", function(req, res){
+    const customlistName = _.capitalize(req.params.customList);
+
+    List.findOne({name:customlistName}, function(err, result){
+        if(!err){
+            if(!result){
+                // Create a new list
+                const list = new List({
+                    name : customlistName,
+                    items : defaultItem
+                });
+                list.save();
+                res.redirect("/"+customlistName);
+            }else {
+                // Show an existing list
+                res.render("list",{listTitle: result.name , newListItems: result.items})
+                
+            }
+        } 
+    });
+
+
+    // res.render("list", {listTitle: "Work List", newListItems: workItems})
+})
 
 
 
 // Posting new Items to the list
 
 app.post("/", function(req, res){
-    
-    console.log( req.body);
-    const item = req.body.newItem; 
 
-    if(req.body.list === "Work List"){
-        workItems.push(item);
-        res.redirect("/work");
-    } else {
-        items.push(item);
+    const itemName = req.body.newItem; 
+    const listName = req.body.list
+
+    const item = new Item({
+        name : itemName
+    });
+    if(listName === day ){
+        item.save(); 
         res.redirect("/");
+    } else{
+        List.findOne({name : listName}, function(err, result){
+            result.items.push(item);
+            result.save();
+            res.redirect("/"+listName)
+        });
+    }  
+});
+
+
+// Deleting the Items from the list.
+app.post("/delete", function(req, res){
+    const checkedItem = req.body.checkbox;
+    const listName = req.body.listName;
+
+    if(listName === day){
+        Item.findByIdAndDelete({_id : checkedItem}, function(err){
+            if(err){
+                console.log(err);
+            } else {
+                console.log("Item removed");
+            }
+            res.redirect("/")
+        });
+    } else {
+        List.findOneAndUpdate({name : listName}, {$pull: {items: {_id : checkedItem}}} ,function(err){
+            if(!err){
+                console.log("Item removed");
+                res.redirect("/"+listName)
+            }
+        });
     }
 });
 
 
 
-
-// Work tToDo list
-app.get("/work", function(req, res){
-    res.render("list", {listTitle: "Work List", newListItems: workItems})
-})
 
 app.get("/about", function(req, res){
     res.render("about")
