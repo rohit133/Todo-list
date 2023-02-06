@@ -19,6 +19,8 @@ var password = process.env.PASSWORD;
 
 const db_url = "mongodb+srv://"+username+":"+password+"@cluster0.vgslnjp.mongodb.net/todolistDb";
 // connecting to MongoDB 
+console.log(db_url);
+
 mongoose.connect(db_url);
 
 const itemSchema = {
