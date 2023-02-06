@@ -1,5 +1,6 @@
 // jshint esversion:6
 
+const dotenv = require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const date = require(__dirname+"/date.js");
@@ -7,14 +8,19 @@ const mongoose = require("mongoose");
 const _ = require("lodash");
 const app = express();
 const day = date.getDay();
+
 // Setting the view engine to ejs and using the bodyParser 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 mongoose.set("strictQuery", false);
+var username = process.env.db_admin;
+var password = process.env.PASSWORD;
 
+const db_url = "mongodb+srv://"+username+":"+password+"@cluster0.vgslnjp.mongodb.net/todolistDb";
+console.log(db_url);
 // connecting to MongoDB 
-mongoose.connect("mongodb://0.0.0.0:27017/todolistDb")
+mongoose.connect(db_url);
 
 const itemSchema = {
     name : String
