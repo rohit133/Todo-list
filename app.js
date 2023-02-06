@@ -19,8 +19,6 @@ var password = process.env.PASSWORD;
 
 const db_url = "mongodb+srv://"+username+":"+password+"@cluster0.vgslnjp.mongodb.net/todolistDb";
 // connecting to MongoDB 
-console.log(db_url);
-
 mongoose.connect(db_url);
 
 const itemSchema = {
@@ -50,8 +48,6 @@ const listSchema = {
 } 
 const List = mongoose.model("List", listSchema)
 
-
-
 // Converting Time and sending it to the List file 
 app.get("/", function(req, res){
     Item.find({}, function(err, result){
@@ -65,7 +61,6 @@ app.get("/", function(req, res){
             });
             res.redirect("/")
         } else {
-            
             res.render("list",{listTitle: day , newListItems: result}); 
         }
        
@@ -75,7 +70,6 @@ app.get("/", function(req, res){
 // Creating Custome name list
 app.get("/:customList", function(req, res){
     const customlistName = _.capitalize(req.params.customList);
-
     List.findOne({name:customlistName}, function(err, result){
         if(!err){
             if(!result){
@@ -93,10 +87,7 @@ app.get("/:customList", function(req, res){
             }
         } 
     });
-
-
-    // res.render("list", {listTitle: "Work List", newListItems: workItems})
-})
+});
 
 
 
@@ -146,8 +137,6 @@ app.post("/delete", function(req, res){
         });
     }
 });
-
-
 
 
 app.get("/about", function(req, res){
