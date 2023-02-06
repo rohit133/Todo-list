@@ -18,7 +18,6 @@ var username = process.env.db_admin;
 var password = process.env.PASSWORD;
 
 const db_url = "mongodb+srv://"+username+":"+password+"@cluster0.vgslnjp.mongodb.net/todolistDb";
-console.log(db_url);
 // connecting to MongoDB 
 mongoose.connect(db_url);
 
@@ -154,6 +153,6 @@ app.get("/about", function(req, res){
 })
 
 // initilizing Ports of the Server. 
-app.listen(5000, function(){
+app.listen(process.env.PORT || 5000, function(){
     console.log("Server running on Port 5000");
 })
